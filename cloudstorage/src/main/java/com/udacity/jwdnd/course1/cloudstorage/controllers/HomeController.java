@@ -1,11 +1,12 @@
 package com.udacity.jwdnd.course1.cloudstorage.controllers;
 
-import com.udacity.jwdnd.course1.cloudstorage.models.CredentialForm;
-import com.udacity.jwdnd.course1.cloudstorage.models.FileForm;
-import com.udacity.jwdnd.course1.cloudstorage.models.NoteForm;
-import com.udacity.jwdnd.course1.cloudstorage.models.User;
+import com.udacity.jwdnd.course1.cloudstorage.models.*;
 import com.udacity.jwdnd.course1.cloudstorage.services.*;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -98,9 +99,14 @@ public class HomeController {
             produces = MediaType.APPLICATION_OCTET_STREAM_VALUE //tell browser return binary stream data
     )
     public @ResponseBody
-    byte[] getFile(@PathVariable String fileName) {
-        return fileService.getFileByFileName(fileName).getFileData();
+    ResponseEntity<Resource> getFile(@PathVariable String fileName) {
+        File file = fileService.getFileByFileName(fileName);
+        return ResponseEntity.ok()
+                .contentType((MediaType.parseMediaType(file.getContentType())))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFileName() + "\"")
+                .body(new ByteArrayResource(file.getFileData()));
     }
+
 
     @GetMapping(value = "/delete-file/{fileName}")
     public String deleteFile(
